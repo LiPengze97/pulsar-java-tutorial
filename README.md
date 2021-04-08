@@ -146,7 +146,7 @@ for (int i = 0; i < 10; i++) {
 client.close();
 ```
 
-You can start the consumer from you IDE or directly from Maven with:
+You can start the producer from you IDE or directly from Maven with:
 
 ```shell
 $ mvn exec:java -Dexec.mainClass="tutorial.ProducerTutorial"

@@ -19,13 +19,16 @@ import java.io.IOException;
 
 import org.apache.pulsar.client.api.CompressionType;
 import org.apache.pulsar.client.api.Message;
-import org.apache.pulsar.client.api.MessageBuilder;
+// import org.apache.pulsar.client.api.MessageBuilder;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.Producer;
-import org.apache.pulsar.client.api.ProducerConfiguration;
+// import org.apache.pulsar.client.api.ProducerConfiguration;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.List;
+import java.util.Arrays;
+
 
 public class ProducerTutorial {
 
@@ -36,27 +39,43 @@ public class ProducerTutorial {
     public static void main(String[] args) throws IOException {
         // Create a Pulsar client instance. A single instance can be shared across many
         // producers and consumer within the same application
-        PulsarClient client = PulsarClient.create(SERVICE_URL);
+        // PulsarClient client = PulsarClient.create(SERVICE_URL);
+        PulsarClient client = PulsarClient.builder()
+        .serviceUrl("pulsar://localhost:6650")
+        .build();
 
         // Here you get the chance to configure producer specific settings. eg:
-        ProducerConfiguration conf = new ProducerConfiguration();
+        // ProducerConfiguration conf = new ProducerConfiguration();
 
         // Enable compression
-        conf.setCompressionType(CompressionType.LZ4);
+        // conf.setCompressionType(CompressionType.LZ4);
 
         // Once the producer is created, it can be used for the entire application life-cycle
-        Producer producer = client.createProducer(TOPIC_NAME, conf);
-        log.info("Created Pulsar producer");
+        // Producer producer = client.createProducer(TOPIC_NAME, conf);
+        // log.info("Created Pulsar producer");
 
+        List<String> restrictReplicationTo = Arrays.asList(
+            "c1",
+            "c2",
+            "c3"
+        );
+
+        Producer producer = client.newProducer()
+        .topic("persistent://my-tenant/my-namespace/wana")
+        .create();
+        log.info("Created Pulsar producer");
         // Send few test messages
         for (int i = 0; i < 10; i++) {
-            String content = String.format("hello-pulsar-%d", i);
+            String content = String.format("hello-wanna!-%d", i);
 
             // Build a message object
-            Message msg = MessageBuilder.create().setContent(content.getBytes()).build();
-
+            // Message msg = MessageBuilder.create().setContent(content.getBytes()).build();
             // Send a message (waits until the message is persisted)
-            MessageId msgId = producer.send(msg);
+            MessageId msgId = producer.newMessage()
+            .value(content.getBytes())
+            .replicationClusters(restrictReplicationTo)
+            .send();
+        //     // MessageId msgId = producer.send(msg);
 
             log.info("Published msg='{}' with msg-id={}", content, msgId);
         }
