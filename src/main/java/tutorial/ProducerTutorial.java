@@ -61,7 +61,7 @@ public class ProducerTutorial {
         );
 
         Producer producer = client.newProducer()
-        .topic("persistent://my-tenant/my-namespace/wana")
+        .topic("non-persistent://my-tenant/my-namespace/wana")
         .create();
         log.info("Created Pulsar producer");
         // Send few test messages

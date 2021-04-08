@@ -60,7 +60,7 @@ public class ConsumerTutorial {
         // Once the consumer is created, it can be used for the entire application life-cycle
         // Consumer consumer = client.subscribe(TOPIC_NAME, SUBSCRIPTION_NAME, conf);
         Consumer<byte[]> consumer = client.newConsumer()
-            .topic("persistent://my-tenant/my-namespace/wana")
+            .topic("non-persistent://my-tenant/my-namespace/wana")
             .subscriptionName("my-subscription")
             .replicateSubscriptionState(true)
             .subscribe();
