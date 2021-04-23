@@ -27,7 +27,14 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.List;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;import java.util.Arrays;
 
 
 public class ProducerTutorial {
@@ -62,24 +69,63 @@ public class ProducerTutorial {
 
         Producer producer = client.newProducer()
         .topic("non-persistent://my-tenant/my-namespace/wana")
+        .maxPendingMessages(10000)
         .create();
         log.info("Created Pulsar producer");
         // Send few test messages
-        for (int i = 0; i < 10; i++) {
-            String content = String.format("hello-wanna!-%d", i);
-
+        double total_time = 0;
+        List<Long> times = new ArrayList();
+        for (int i = 0; i < 1001; i++) {
+            String content = String.format("hello!!!!!!-wanna!-%d", i);
+            long startTime = System.currentTimeMillis();
             // Build a message object
             // Message msg = MessageBuilder.create().setContent(content.getBytes()).build();
+
             // Send a message (waits until the message is persisted)
-            MessageId msgId = producer.newMessage()
-            .value(content.getBytes())
-            .replicationClusters(restrictReplicationTo)
-            .send();
+            // MessageId msgId = producer.newMessage()
+            // .value(content.getBytes())
+            // .replicationClusters(restrictReplicationTo)
+            // .send();
+
+            // async send
+            log.info("{} before send{}", i, System.currentTimeMillis());
+            times.add(System.currentTimeMillis());
+            producer.newMessage()
+                  .value(content.getBytes())
+                  .sendAsync().thenAccept(messageId -> {
+                log.info("Published message {} at {}", messageId, System.currentTimeMillis());
+            }).exceptionally(e -> {
+                System.out.println("Failed to publish " + e);
+                return null;
+            });
+            log.info("{} after send{}", i, System.currentTimeMillis());
+            // total_time += (System.currentTimeMillis() - startTime*1.0)/1000;
         //     // MessageId msgId = producer.send(msg);
 
-            log.info("Published msg='{}' with msg-id={}", content, msgId);
+            // log.info("Published msg='{}' with msg-id={}", content, msgId);
         }
+        // log.info("total time is {} s", total_time);
+        try {
+            Thread.sleep(5000);
+        } catch (Exception e) {
+            //TODO: handle exception
+        }
+        File writeFile = new File("./out.csv");
+ 
+        try{
+            BufferedWriter writeText = new BufferedWriter(new FileWriter(writeFile));
+            for(int i=0;i<times.size();i++){
+                writeText.newLine();    
+                writeText.write(String.valueOf(times.get(i)));
+            }
 
+            writeText.flush();
+            writeText.close();
+        }catch (FileNotFoundException e){
+            System.out.println("没有找到指定文件");
+        }catch (IOException e){
+            System.out.println("文件读写出错");
+        }
         client.close();
     }
 
