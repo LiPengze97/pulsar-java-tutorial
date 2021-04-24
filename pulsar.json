@@ -1,6 +1,10 @@
 {
     "ip": "127.0.0.1",
     "port": 36650,
-    "local_site_id": 0,
-    "sender_site_id": 0
+    "local_site_id": 1,
+    "sender_site_id": 0,
+    "rate": 100,
+    "message_size" : 1024,
+    "message_num" : 10000,
+    "server_num" : 1
 }

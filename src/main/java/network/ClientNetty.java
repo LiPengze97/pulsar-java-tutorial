@@ -36,7 +36,7 @@ public class ClientNetty {
     }
     
     // 请求端主题
-    private void action() throws InterruptedException, UnsupportedEncodingException {
+    public ChannelFuture action() throws InterruptedException, UnsupportedEncodingException {
         
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         
@@ -57,15 +57,14 @@ public class ClientNetty {
         
         // 客户端开启
         ChannelFuture cf = bs.connect(ip, port).sync();
-
-        System.out.println("?????");
-        for(int i = 0; i < 100; i++){
-            Request req = new Request(i,i+1000);
-            cf.channel().writeAndFlush(req);
-        }
+        return cf;
+        // for(int i = 0; i < 100; i++){
+        //     Request req = new Request(i,i+1000);
+        //     cf.channel().writeAndFlush(req);
+        // }
         
         // 等待直到连接中断
-        cf.channel().closeFuture().sync();      
+        // cf.channel().closeFuture().sync();      
     }
             
     public static void main(String[] args) throws UnsupportedEncodingException, InterruptedException {

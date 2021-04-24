@@ -11,21 +11,81 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;import java.util.Arrays;
+
 import myutil.Request;
 /**
  * 处理客户端的请求
  */
 public class ServerHandler extends ChannelInboundHandlerAdapter {
+    public long[] time_recorder;
+    int server_num;
+    int msg_num;
+    public void initialize_time_recorder(int msg_num, int server_num){
+        this.msg_num = msg_num;
+        this.server_num = server_num;
+        time_recorder = new long[msg_num*(server_num+2)];
+    }
+
+    public void record_time(int msg_id, int site_id){
+        time_recorder[msg_id*(server_num+1)+site_id] = System.currentTimeMillis();
+    }
+
+    public void output_data(){
+        File writeFile = new File("./out.csv");
+ 
+        try{
+            BufferedWriter writeText = new BufferedWriter(new FileWriter(writeFile));
+            writeText.write("start,");
+            for(int i = 0; i < server_num; i++){
+                if(i != server_num - 1){
+                    writeText.write(String.valueOf(i+1)+",");
+                }else{
+                    writeText.write(String.valueOf(i+1));
+                    writeText.newLine();
+                }
+            }
+            
+            for(int i = 0; i < msg_num; i++){
+                for(int j = 0; j <= server_num; j++){
+                    // String content = String.valueOf(time_recorder[msg_num * (server_num+1) + j]);
+                    // String content1 = String.valueOf(time_recorder[i]);
+                    // String content2 = String.valueOf(i * (server_num+1) + j);
+                    // System.out.println(content);
+                    // System.out.println(content1);
+                    // System.out.println(content2);
+                    if(j != server_num){
+                        writeText.write(String.valueOf(time_recorder[i * (server_num+1) + j])+",");
+                    }else{
+                        writeText.write(String.valueOf(time_recorder[i * (server_num+1) + j]));
+                        writeText.newLine();
+                    }
+                }
+            }
+            writeText.flush();
+            writeText.close();
+        }catch (FileNotFoundException e){
+            System.out.println("没有找到指定文件");
+        }catch (IOException e){
+            System.out.println("文件读写出错");
+        }
+    }
 
     // 读取数据
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {       
         // 普通的处理 及过滤器不多
         if (msg instanceof Request){
-            System.out.println("Request");
+            // System.out.println("Request");
             handlerObject(ctx, msg);
         }else{
-            System.out.println("string");
+            // System.out.println("string");
             simpleRead(ctx, msg);  
         }
     }
@@ -92,6 +152,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
         // 需要序列化 直接把msg转成对象信息，一般不会用，可以用json字符串在不同语言中传递信息
         Request req = (Request)msg;
         System.err.println("message_id: "+req.get_message_id()+"site_id: "+req.get_site_id());
+        record_time(req.get_message_id(),req.get_site_id());
         // ctx.writeAndFlush(req);
     }
     
