@@ -84,10 +84,14 @@ public class ConsumerTutorial {
             .subscribe();
         log.info("Created Pulsar consumer");
         int cnt= 0;
+        double total_byte = 0;
+        long all_start_time = 0;
         while (true) {
             // Wait until a message is available
             Message msg = consumer.receive();
-
+            if(all_start_time == 0){
+                all_start_time = System.currentTimeMillis();
+            }
             // Do something with the message
             // String content a= new String(msg.getData());
             String content = byteArrayToStr(msg.getData());
@@ -100,9 +104,12 @@ public class ConsumerTutorial {
             // to netty server
             Request req = new Request(cnt, local_id);
             cf.channel().writeAndFlush(req);
+            total_byte += content.length();
             if(++cnt==msg_num){break;}
         }
-        log.info("send finished");
+        double total_time = (System.currentTimeMillis() - all_start_time*1.0) / 1000.0;
+        total_byte /= 1024.0*1024.0;
+        log.info("{} msg/s, {} MByte/s", cnt/total_time, total_byte/total_time);
         // File writeFile = new File("./out.csv");
         // try{
 
