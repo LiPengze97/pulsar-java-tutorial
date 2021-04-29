@@ -13,6 +13,9 @@ import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 import java.io.UnsupportedEncodingException;
 
+import java.util.Random;
+import java.util.Scanner;
+
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
@@ -73,7 +76,17 @@ public class ClientNetty {
         JSONObject jsonobject = JSON.parseObject(jsonContent);
         int port = jsonobject.getIntValue("port");
         String ip = jsonobject.getString("ip");
-        new ClientNetty(ip, port).action();
+        Random rand = new Random();
+        int local_id = rand.nextInt(10);
+        ChannelFuture cf = new ClientNetty(ip, port).action();
+        Scanner scan = new Scanner(System.in);
+        System.out.println("Netty Client ready, press enter to send message");
+        scan.nextLine();
+        for(int i = 0; i < 100; i++){
+            // cf.channel().writeAndFlush(new Request(i, local_id));
+            cf.channel().writeAndFlush("???");
+        }
+        cf.channel().closeFuture().sync();  
     }
         
 }

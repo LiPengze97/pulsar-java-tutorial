@@ -16,24 +16,29 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 import java.util.Scanner;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+// import com.alibaba.fastjson.JSON;
+// import com.alibaba.fastjson.JSONObject;
 
-import myutil.MyConstant;
-import myutil.FileUtil;
-import myutil.Request;
+// import myutil.MyConstant;
+// import net.FileUtil;
+
 
 /**
  * tcp/ip 服务端用netty实现
  *
  */
-public class ServerNetty {
+public class PulsarNettyServer {
     
     private int port;   
-    public ServerNetty(int port){
+    private int msg_num;
+    public PulsarNettyServer(int port){
         this.port = port;
     }
-    private ServerHandler serverhandler;
+    public PulsarNettyServer(int port, int msg_num){
+        this.port = port;
+        this.msg_num = msg_num;
+    }
+    // private PulsarNettyServerHandler serverhandler;
     
     // netty 服务端启动
     public void action() throws InterruptedException{
@@ -46,7 +51,7 @@ public class ServerNetty {
         try {
             // nio服务的启动类
             ServerBootstrap sbs = new ServerBootstrap();
-            serverhandler = new ServerHandler();
+            // serverhandler = new PulsarNettyServerHandler();
             // 配置nio服务参数
             sbs.group(bossGroup, workerGroup)
                .channel(NioServerSocketChannel.class) // 说明一个新的Channel如何接收进来的连接
@@ -57,10 +62,9 @@ public class ServerNetty {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         // 处理接收到的请求
-                        System.out.println("Received an new connection");
                         socketChannel.pipeline().addLast(new ObjectEncoder(),
                                                          new ObjectDecoder(ClassResolvers.cacheDisabled(null)),
-                                                         serverhandler); // 这里相当于过滤器，可以配置多个
+                                                         new PulsarNettyServerHandler(msg_num)); // 这里相当于过滤器，可以配置多个
                     }
                });
             // 绑定端口，开始接受链接
@@ -75,27 +79,16 @@ public class ServerNetty {
             // workerGroup.shutdownGracefully();
         }           
     }
-    
-    public void record_time(int msg_id, int site_id){
-        serverhandler.record_time(msg_id, site_id);
-    }
 
-    public void initialize_time_recorder(int msg_num, int server_num){
-        serverhandler.initialize_time_recorder(msg_num, server_num);
-    }
-
-    public void output_data(){
-        serverhandler.output_data();
-    }
         
     // 开启netty服务线程
     public static void main(String[] args) throws InterruptedException {
-        String filePath = "pulsar.json";
-        String jsonContent = FileUtil.ReadFile(filePath);
-        JSONObject jsonobject = JSON.parseObject(jsonContent);
-        int port = jsonobject.getIntValue("port");
+        // String filePath = "pulsar.json";
+        // String jsonContent = FileUtil.ReadFile(filePath);
+        // JSONObject jsonobject = JSON.parseObject(jsonContent);
+        // int port = jsonobject.getIntValue("port");
 
-        new ServerNetty(port).action();
-        
+        // new ServerNetty(port).action();
+        new PulsarNettyServer(10086, 100).action();
     }
 }

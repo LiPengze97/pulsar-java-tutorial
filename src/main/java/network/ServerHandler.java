@@ -133,7 +133,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
     // 数据读取完毕的处理
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-        System.err.println("服务端读取数据完毕");
+        // System.err.println("服务端读取数据完毕");
     }
     
     // 出现异常的处理
@@ -151,7 +151,10 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
     private void handlerObject(ChannelHandlerContext ctx, Object msg) {
         // 需要序列化 直接把msg转成对象信息，一般不会用，可以用json字符串在不同语言中传递信息
         Request req = (Request)msg;
-        System.err.println("message_id: "+req.get_message_id()+"site_id: "+req.get_site_id());
+        if(Integer.valueOf(req.get_message_id())%1000 == 0 ){
+            System.err.println("message_id: "+req.get_message_id()+"site_id: "+req.get_site_id());
+        }
+
         record_time(req.get_message_id(),req.get_site_id());
         // ctx.writeAndFlush(req);
     }

@@ -39,12 +39,15 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;import java.util.Arrays;
 
+import java.util.Scanner;
+
 import com.google.common.util.concurrent.RateLimiter;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
-import network.ServerNetty;
+// import network.ServerNetty;
+import network.PulsarNettyServer;
 
 import myutil.FileUtil;
 import myutil.Request;
@@ -78,9 +81,9 @@ public class ProducerTutorial {
         }
 
         // start netty server
-        ServerNetty servernetty = new ServerNetty(port);
-        servernetty.action();
-        servernetty.initialize_time_recorder(msg_num, server_num);
+        PulsarNettyServer pulsarnettyserver = new PulsarNettyServer(port, msg_num);
+        pulsarnettyserver.action();
+        // servernetty.initialize_time_recorder(msg_num, server_num);
         PulsarClient client = PulsarClient.builder()
         .serviceUrl("pulsar://localhost:6650")
         .build();
@@ -92,13 +95,16 @@ public class ProducerTutorial {
         );
 
         Producer producer = client.newProducer()
-        .topic("non-persistent://my-tenant/my-namespace/wana")
+        // .topic("non-persistent://my-tenant/my-namespace/wana")
+        .topic("non-persistent://my-tenant/my-namespace/wana15")
         .maxPendingMessages(10000)
+        .enableBatching(false)
         .create();
         log.info("Created Pulsar producer");
         // Send few test messages
         double total_time = 0;
         List<Long> times = new ArrayList();
+        List<Long> out_queue_times = new ArrayList();
         for (int i = 0; i < msg_num; i++) {
             // limit the send rate
             rateLimiter.acquire();
@@ -112,12 +118,14 @@ public class ProducerTutorial {
             // .send();
 
             // async send
-            log.info("{} before send{}", i, System.currentTimeMillis());
+            // log.info("{} before send{}", i, System.currentTimeMillis());
             times.add(System.currentTimeMillis());
-            servernetty.record_time(i, 0);
+            // servernetty.record_time(i, 0);
             producer.newMessage()
+                  .key(String.valueOf(i))
                   .value(payloadBytes)
                   .sendAsync().thenAccept(messageId -> {
+                    out_queue_times.add(System.currentTimeMillis());
                 // log.info("Published message {} at {}", messageId, System.currentTimeMillis());
             }).exceptionally(e -> {
                 System.out.println("Failed to publish " + e);
@@ -130,28 +138,27 @@ public class ProducerTutorial {
             // log.info("Published msg='{}' with msg-id={}", content, msgId);
         }
         // log.info("total time is {} s", total_time);
-        try {
-            Thread.sleep(5000);
-        } catch (Exception e) {
-            //TODO: handle exception
-        }
-        // File writeFile = new File("./out.csv");
+        
+        
+        Scanner scan = new Scanner(System.in);
+        System.out.println("All done?");
+        scan.nextLine();
+        File writeFile = new File("./sender.csv");
  
-        // try{
-        //     BufferedWriter writeText = new BufferedWriter(new FileWriter(writeFile));
-        //     for(int i=0;i<times.size();i++){
-        //         writeText.write(String.valueOf(times.get(i)));
-        //         writeText.newLine();  
-        //     }
-
-        //     writeText.flush();
-        //     writeText.close();
-        // }catch (FileNotFoundException e){
-        //     System.out.println("没有找到指定文件");
-        // }catch (IOException e){
-        //     System.out.println("文件读写出错");
-        // }
-        servernetty.output_data();
+        try{
+            BufferedWriter writeText = new BufferedWriter(new FileWriter(writeFile));
+            for(int i=0;i<times.size();i++){
+                writeText.write(String.valueOf(times.get(i)) + "," + String.valueOf(out_queue_times.get(i)));
+                writeText.newLine();  
+            }
+            writeText.flush();
+            writeText.close();
+        }catch (FileNotFoundException e){
+            System.out.println("没有找到指定文件");
+        }catch (IOException e){
+            System.out.println("文件读写出错");
+        }
+        // servernetty.output_data();
         client.close();
     }
 
