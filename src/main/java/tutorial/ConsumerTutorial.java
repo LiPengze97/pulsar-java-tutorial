@@ -81,6 +81,7 @@ public class ConsumerTutorial {
             .topic("non-persistent://my-tenant/my-namespace/wana")
             .subscriptionName("my-subscription")
             .replicateSubscriptionState(true)
+            .receiverQueueSize(10000)
             .subscribe();
         log.info("Created Pulsar consumer");
         int cnt= 0;
