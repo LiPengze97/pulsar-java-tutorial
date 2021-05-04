@@ -75,7 +75,8 @@ public class ConsumerTutorial {
         int local_id = jsonobject.getIntValue("local_site_id");
         int msg_num = jsonobject.getIntValue("message_num");
         int msg_size = jsonobject.getIntValue("message_size");
-
+	int rate = jsonobject.getIntValue("rate");
+	int wait_time = msg_num/rate+10;
         ChannelFuture cf = new ClientNetty(ip, port).action();
 
         PulsarClient client = PulsarClient.builder()
@@ -132,9 +133,10 @@ public class ConsumerTutorial {
                 }
             });
             es.shutdown();
-            boolean finished = es.awaitTermination(10, TimeUnit.SECONDS);
+            boolean finished = es.awaitTermination(wait_time, TimeUnit.SECONDS);
             if (!finished) {
-                es.shutdownNow();
+		System.out.println("shutdowned");
+    		    es.shutdownNow();
                 break;
             }
             // last_message_time = System.currentTimeMillis();
