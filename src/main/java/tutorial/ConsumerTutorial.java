@@ -24,6 +24,7 @@ import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.SubscriptionType;
 import org.apache.pulsar.client.api.Schema;
+import org.apache.pulsar.client.api.PulsarClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +37,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;import java.util.Arrays;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -69,14 +74,15 @@ public class ConsumerTutorial {
         String ip = jsonobject.getString("ip");
         int local_id = jsonobject.getIntValue("local_site_id");
         int msg_num = jsonobject.getIntValue("message_num");
+        int msg_size = jsonobject.getIntValue("message_size");
 
         ChannelFuture cf = new ClientNetty(ip, port).action();
 
         PulsarClient client = PulsarClient.builder()
         .serviceUrl("pulsar://localhost:6650")
         .build();
-        List<Long> times = new ArrayList();
-
+        List<Long> receive_times = new ArrayList();
+        List<Long> start_times = new ArrayList();
         Consumer<byte[]> consumer = client.newConsumer()
             .topic("non-persistent://my-tenant/my-namespace/wana")
             .subscriptionName("my-subscription")
@@ -86,31 +92,75 @@ public class ConsumerTutorial {
         log.info("Created Pulsar consumer");
         int cnt= 0;
         double total_byte = 0;
-        long all_start_time = 0;
+        long all_start_time = 0, last_message_time = 0;
+        ExecutorService es = Executors.newFixedThreadPool(1);
+        
         while (true) {
             // Wait until a message is available
-            Message msg = consumer.receive();
-            if(all_start_time == 0){
-                all_start_time = System.currentTimeMillis();
+            // Message msg = consumer.receive();
+                es.execute(new Runnable() {
+                @Override
+                public void run(){
+                    try {
+                        while(true){
+                            Message msg = consumer.receive();
+                            receive_times.add(System.currentTimeMillis());
+                            // last_message_time = System.currentTimeMillis();
+                            if(start_times.size() == 0){
+                                start_times.add(System.currentTimeMillis());
+                            }
+                            // Do something with the message
+                            // String content a= new String(msg.getData());
+                            String content = byteArrayToStr(msg.getData());
+                            // log.info("Receiveed message with {} Byte with msg-id={} from{}", content.length(), msg.getMessageId(), msg.getReplicatedFrom());
+                            System.out.println("cnt " + receive_times.size() + " , message key" + msg.getKey());
+                            // long timee = System.currentTimeMillis() - msg.getPublishTime();
+                            // times.add(timee);
+                            // log.info("used {} ms since {}", timee, msg.getPublishTime());
+                            // Acknowledge processing of message so that it can be deleted
+                            consumer.acknowledge(msg);
+                            // to netty server
+                            Request req = new Request(receive_times.size(), local_id);
+                            cf.channel().writeAndFlush(req);
+                            // total_byte += content.length();
+                        }
+                        
+                    } catch (PulsarClientException e) {
+                        // System.out.println("interrupt, then quit");
+                        // return;
+                    }
+                }
+            });
+            es.shutdown();
+            boolean finished = es.awaitTermination(10, TimeUnit.SECONDS);
+            if (!finished) {
+                es.shutdownNow();
+                break;
             }
-            // Do something with the message
-            // String content a= new String(msg.getData());
-            String content = byteArrayToStr(msg.getData());
-            log.info("Receiveed message with {} Byte with msg-id={} from{}", content.length(), msg.getMessageId(), msg.getReplicatedFrom());
-	        // long timee = System.currentTimeMillis() - msg.getPublishTime();
-            // times.add(timee);
-	        // log.info("used {} ms since {}", timee, msg.getPublishTime());
-            // Acknowledge processing of message so that it can be deleted
-            consumer.acknowledge(msg);
-            // to netty server
-            Request req = new Request(cnt, local_id);
-            cf.channel().writeAndFlush(req);
-            total_byte += content.length();
-            if(++cnt==msg_num){break;}
+            // last_message_time = System.currentTimeMillis();
+            // if(all_start_time == 0){
+            //     all_start_time = System.currentTimeMillis();
+            // }
+            // // Do something with the message
+            // String content = byteArrayToStr(msg.getData());
+            // System.out.println("cnt " + cnt + " , message key" + msg.getKey());
+            // // Acknowledge processing of message so that it can be deleted
+            // consumer.acknowledge(msg);
+            // // to netty server
+            // Request req = new Request(cnt, local_id);
+            // cf.channel().writeAndFlush(req);
+            // total_byte += content.length();
+            // if(++cnt==msg_num){break;}
         }
-        double total_time = (System.currentTimeMillis() - all_start_time*1.0) / 1000.0;
-        total_byte /= 1024.0*1024.0;
-        log.info("{} msg/s, {} MByte/s", cnt/total_time, total_byte/total_time);
+        // double total_time = (System.currentTimeMillis() - all_start_time*1.0) / 1000.0;
+        // double total_time = (last_message_time - all_start_time*1.0) / 1000.0;
+        double total_time = (receive_times.get(receive_times.size()-1) - start_times.get(0)*1.0) / 1000.0;
+        // total_byte /= 1024.0*1024.0;
+        total_byte = msg_size * receive_times.size() * 1.0 / (1024.0*1024.0);
+        log.info("{} msg/s, {} MByte/s", receive_times.size()/total_time, total_byte/total_time);
+        Request req = new Request(-1, local_id);
+        cf.channel().writeAndFlush(req);
+        client.close();
         // File writeFile = new File("./out.csv");
         // try{
 

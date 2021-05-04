@@ -96,7 +96,7 @@ public class ProducerTutorial {
 
         Producer producer = client.newProducer()
         // .topic("non-persistent://my-tenant/my-namespace/wana")
-        .topic("non-persistent://my-tenant/my-namespace/wana15")
+        .topic("non-persistent://my-tenant/my-namespace/wana")
         .maxPendingMessages(10000)
         .enableBatching(false)
         .create();
@@ -147,6 +147,8 @@ public class ProducerTutorial {
  
         try{
             BufferedWriter writeText = new BufferedWriter(new FileWriter(writeFile));
+            writeText.write("enqueue_time,leave_queue");
+            writeText.newLine(); 
             for(int i=0;i<times.size();i++){
                 writeText.write(String.valueOf(times.get(i)) + "," + String.valueOf(out_queue_times.get(i)));
                 writeText.newLine();  

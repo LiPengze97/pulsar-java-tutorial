@@ -48,7 +48,7 @@ public class PulsarNettyServerHandler extends ChannelInboundHandlerAdapter {
     }
 
     public void record_time(int msg_id){
-        time_recorder[msg_id] = System.currentTimeMillis();
+        time_recorder[msg_id-1] = System.currentTimeMillis();
     }
 
     public void output_data(){
@@ -144,10 +144,10 @@ public class PulsarNettyServerHandler extends ChannelInboundHandlerAdapter {
             site_id = req.get_site_id();
         }
         System.out.println("message_id: "+req.get_message_id()+"site_id: "+req.get_site_id());
-        record_time(req.get_message_id());
-        if(Integer.valueOf(req.get_message_id()) == (msg_num-1)){
+        if(Integer.valueOf(req.get_message_id()) == (-1)){
             output_data();
         }
+        record_time(req.get_message_id());
         ReferenceCountUtil.release(msg);
     }
     
