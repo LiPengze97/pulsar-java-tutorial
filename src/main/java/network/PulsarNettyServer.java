@@ -31,12 +31,14 @@ public class PulsarNettyServer {
     
     private int port;   
     private int msg_num;
+    private int throughput;
     public PulsarNettyServer(int port){
         this.port = port;
     }
-    public PulsarNettyServer(int port, int msg_num){
+    public PulsarNettyServer(int port, int msg_num, int throughput){
         this.port = port;
         this.msg_num = msg_num;
+        this.throughput = throughput;
     }
     // private PulsarNettyServerHandler serverhandler;
     
@@ -64,7 +66,7 @@ public class PulsarNettyServer {
                         // 处理接收到的请求
                         socketChannel.pipeline().addLast(new ObjectEncoder(),
                                                          new ObjectDecoder(ClassResolvers.cacheDisabled(null)),
-                                                         new PulsarNettyServerHandler(msg_num)); // 这里相当于过滤器，可以配置多个
+                                                         new PulsarNettyServerHandler(msg_num,throughput)); // 这里相当于过滤器，可以配置多个
                     }
                });
             // 绑定端口，开始接受链接
@@ -89,6 +91,6 @@ public class PulsarNettyServer {
         // int port = jsonobject.getIntValue("port");
 
         // new ServerNetty(port).action();
-        new PulsarNettyServer(10086, 100).action();
+        new PulsarNettyServer(10086, 100, 100).action();
     }
 }

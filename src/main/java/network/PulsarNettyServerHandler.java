@@ -34,12 +34,14 @@ public class PulsarNettyServerHandler extends ChannelInboundHandlerAdapter {
     private static ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     public long[] time_recorder;
     int site_id = -1;
+    int throughput = -1;
     int msg_num;
 
     public PulsarNettyServerHandler(){}
 
-    public PulsarNettyServerHandler(int msg_num){
+    public PulsarNettyServerHandler(int msg_num, int throughput){
         initialize_time_recorder(msg_num);
+        this.throughput = throughput;
     }
 
     public void initialize_time_recorder(int msg_num){
@@ -48,11 +50,11 @@ public class PulsarNettyServerHandler extends ChannelInboundHandlerAdapter {
     }
 
     public void record_time(int msg_id){
-        time_recorder[msg_id-1] = System.currentTimeMillis();
+        time_recorder[msg_id] = System.currentTimeMillis();
     }
 
     public void output_data(){
-        String file_name = "./site_" + String.valueOf(site_id)+".csv";
+        String file_name = "./"+String.valueOf(throughput) + "_site_" + String.valueOf(site_id)+".csv";
         System.out.println(site_id+" is outputing!");
         File writeFile = new File(file_name);
  

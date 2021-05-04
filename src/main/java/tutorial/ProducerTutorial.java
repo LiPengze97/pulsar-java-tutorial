@@ -81,7 +81,7 @@ public class ProducerTutorial {
         }
 
         // start netty server
-        PulsarNettyServer pulsarnettyserver = new PulsarNettyServer(port, msg_num);
+        PulsarNettyServer pulsarnettyserver = new PulsarNettyServer(port, msg_num, rate);
         pulsarnettyserver.action();
         // servernetty.initialize_time_recorder(msg_num, server_num);
         PulsarClient client = PulsarClient.builder()
@@ -143,7 +143,7 @@ public class ProducerTutorial {
         Scanner scan = new Scanner(System.in);
         System.out.println("All done?");
         scan.nextLine();
-        File writeFile = new File("./sender.csv");
+        File writeFile = new File("./"+String.valueOf(rate)+"_sender.csv");
  
         try{
             BufferedWriter writeText = new BufferedWriter(new FileWriter(writeFile));
