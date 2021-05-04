@@ -121,7 +121,7 @@ public class ConsumerTutorial {
                             // Acknowledge processing of message so that it can be deleted
                             consumer.acknowledge(msg);
                             // to netty server
-                            Request req = new Request(receive_times.size(), local_id);
+                            Request req = new Request(Integer.valueOf(msg.getKey()), local_id);
                             cf.channel().writeAndFlush(req);
                             // total_byte += content.length();
                         }
@@ -158,8 +158,8 @@ public class ConsumerTutorial {
         // double total_time = (last_message_time - all_start_time*1.0) / 1000.0;
         double total_time = (receive_times.get(receive_times.size()-1) - start_times.get(0)*1.0) / 1000.0;
         // total_byte /= 1024.0*1024.0;
-        total_byte = msg_size * receive_times.size() * 1.0 / (1024.0*1024.0);
-        log.info("{} msg/s, {} MByte/s", receive_times.size()/total_time, total_byte/total_time);
+        total_byte = 8*msg_size * receive_times.size() * 1.0 / (1024.0*1024.0);
+        log.info("{} msg/s, {} MBit/s", receive_times.size()/total_time, total_byte/total_time);
         Request req = new Request(-1, local_id);
         cf.channel().writeAndFlush(req);
         client.close();
