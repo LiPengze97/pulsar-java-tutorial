@@ -105,9 +105,22 @@ public class ProducerTutorial {
         double total_time = 0;
         List<Long> times = new ArrayList();
         List<Long> out_queue_times = new ArrayList();
-        for (int i = 0; i < msg_num; i++) {
+        long start_time = System.currentTimeMillis();
+        long now_time;
+        for (int i = 1; i <= msg_num; i++) {
             // limit the send rate
-            rateLimiter.acquire();
+            // rateLimiter.acquire();
+            now_time = System.currentTimeMillis();
+            // same method as wanagent rate limit
+            while ((now_time - start_time)/1000.0*rate < (i - 1)) {
+                try{
+                    Thread.sleep(0, 50000);
+                }catch (InterruptedException e){
+
+                }
+                now_time = System.currentTimeMillis();
+            }
+
             String content = String.format("hello!!!!!!-wanna!-%d", i);
             long startTime = System.currentTimeMillis();
 

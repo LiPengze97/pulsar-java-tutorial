@@ -1,10 +1,10 @@
 {
-    "ip": "128.110.154.187",
+    "ip": "128.110.154.124",
     "port": 36650,
-    "local_site_id": 0,
+    "local_site_id": 123,
     "sender_site_id": 0,
-    "rate": 1000,
-    "message_size" : 1024,
+    "rate": 8000,
+    "message_size" : 8192,
     "message_num" : 10000,
     "server_num" : 4
 }
