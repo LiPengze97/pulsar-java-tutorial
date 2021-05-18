@@ -125,7 +125,7 @@ public class PulsarNettyServerHandler extends ChannelInboundHandlerAdapter {
     // 数据读取完毕的处理
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-        System.err.println("服务端读取数据完毕");
+        // System.err.println("服务端读取数据完毕");
     }
     
     // 出现异常的处理
@@ -145,7 +145,7 @@ public class PulsarNettyServerHandler extends ChannelInboundHandlerAdapter {
         if(site_id == -1){
             site_id = req.get_site_id();
         }
-        System.out.println("message_id: "+req.get_message_id()+"site_id: "+req.get_site_id());
+        // System.out.println("message_id: "+req.get_message_id()+"site_id: "+req.get_site_id());
         if(Integer.valueOf(req.get_message_id()) == (-1)){
             output_data();
         }

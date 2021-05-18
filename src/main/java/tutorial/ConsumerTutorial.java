@@ -114,7 +114,7 @@ public class ConsumerTutorial {
                             // String content a= new String(msg.getData());
                             String content = byteArrayToStr(msg.getData());
                             // log.info("Receiveed message with {} Byte with msg-id={} from{}", content.length(), msg.getMessageId(), msg.getReplicatedFrom());
-                            System.out.println("cnt " + receive_times.size() + " , message key" + msg.getKey());
+                            // System.out.println("cnt " + receive_times.size() + " , message key" + msg.getKey());
                             // long timee = System.currentTimeMillis() - msg.getPublishTime();
                             // times.add(timee);
                             // log.info("used {} ms since {}", timee, msg.getPublishTime());

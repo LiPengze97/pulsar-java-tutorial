@@ -3,7 +3,7 @@
     "port": 36650,
     "local_site_id": 123,
     "sender_site_id": 0,
-    "rate": 8000,
+    "rate": 16000,
     "message_size" : 8192,
     "message_num" : 10000,
     "server_num" : 4

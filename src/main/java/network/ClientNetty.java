@@ -48,6 +48,7 @@ public class ClientNetty {
         bs.group(bossGroup)
           .channel(NioSocketChannel.class)
           .option(ChannelOption.SO_KEEPALIVE, true)
+          .option(ChannelOption.TCP_NODELAY, true)
           .handler(new ChannelInitializer<SocketChannel>() {
               @Override
               protected void initChannel(SocketChannel socketChannel) throws Exception {              
